@@ -115,7 +115,10 @@ int BasicCPU::ID()
 			fpOP = false;
 			return decodeDataProcImm();
 			break;
-		// case TODO
+		case 0x0A000000: 
+        case 0x1A000000:
+            return decodeDataProcReg();
+            break;
 		// x101 Data Processing -- Register on page C4-278
 		default:
 			return 1; // instrução não implementada
@@ -221,16 +224,43 @@ int BasicCPU::decodeLoadStore() {
  *		   1: se a instrução não estiver implementada.
  */
 int BasicCPU::decodeDataProcReg() {
-	// TODO
-	//		acrescentar um switch no estilo do switch de decodeDataProcImm,
-	//		e implementar APENAS PARA A INSTRUÇÃO A SEGUIR:
-	//				'add w1, w1, w0'
-	//		que aparece na linha 43 de isummation.S e no endereço 0x68
-	//		de txt_isummation.o.txt.
-	
-	
-	// instrução não implementada
-	return 1;
+// TODO
+
+    unsigned int n,m,shift,imm6;
+
+    switch (IR & 0xFF200000)
+    {
+
+        case 0x0B000000:
+            if (IR & 0x80000000) return 1;
+
+            n=(IR & 0x000003E0) >> 5;
+            A=getW(n);
+
+            m=(IR & 0x001F0000) >> 16;
+            int BW=getW(m);
+
+            shift=(IR & 0x00C00000) >> 22;
+            imm6=(IR & 0x0000FC00) >> 10;
+
+            switch(shift){
+                case 0:
+                    B= BW << imm6;
+                    break;
+                case 1:
+                    B=((unsigned long)BW) >> imm6;
+                    break;
+                case 2:
+                    B=((signed long)BW) >> imm6;
+                    break;
+                default:
+                    return 1;
+            }
+
+            return 0;
+    }
+
+    return 1;
 }
 
 /**
